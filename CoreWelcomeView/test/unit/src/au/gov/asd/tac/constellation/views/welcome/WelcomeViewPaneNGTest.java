@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 Australian Signals Directorate
+ * Copyright 2010-2024 Australian Signals Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package au.gov.asd.tac.constellation.views.welcome;
 
+import au.gov.asd.tac.constellation.graph.file.open.RecentFiles;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,6 +44,9 @@ public class WelcomeViewPaneNGTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        final WelcomeStartup ws = new WelcomeStartup();
+        ws.run();
+        RecentFiles.init();
         if (!FxToolkit.isFXApplicationThreadRunning()) {
             FxToolkit.registerPrimaryStage();
         }
@@ -73,7 +77,6 @@ public class WelcomeViewPaneNGTest {
         welcomePane.setButtonProps(button);
 
         verify(button).setMaxSize(150, 150);
-        verify(button).setStyle("-fx-background-color: #2e4973;");
         verify(button).setContentDisplay(ContentDisplay.TOP);
     }
 
@@ -88,7 +91,7 @@ public class WelcomeViewPaneNGTest {
         welcomePane.createRecentButtons(button);
 
         verify(button).setMaxSize(175, 175);
-        verify(button).setStyle("-fx-background-color: #333333; -fx-background-radius: 10px; -fx-text-fill: white;");
+        verify(button).setId("recent-button");
         verify(button).setContentDisplay(ContentDisplay.TOP);
     }
 
@@ -106,5 +109,4 @@ public class WelcomeViewPaneNGTest {
         verify(button).setStyle("-fx-background-color: transparent;");
         verify(button).setAlignment(Pos.CENTER_LEFT);
     }
-
 }

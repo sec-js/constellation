@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 Australian Signals Directorate
+ * Copyright 2010-2024 Australian Signals Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,15 @@
  */
 package au.gov.asd.tac.constellation.help;
 
+import au.gov.asd.tac.constellation.help.utilities.HelpMapper;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.doNothing;
@@ -41,41 +47,42 @@ import org.testng.annotations.Test;
  * @author Delphinus8821
  */
 public class HelpServletNGTest {
-
-    public HelpServletNGTest() {
-    }
-
+    
     @BeforeClass
     public static void setUpClass() throws Exception {
+        // Not currently required
     }
 
     @AfterClass
     public static void tearDownClass() throws Exception {
+        // Not currently required
     }
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
+        // Not currently required
     }
 
     @AfterMethod
     public void tearDownMethod() throws Exception {
+        // Not currently required
     }
 
     /**
      * Test of doGet method, of class HelpServlet
      *
-     * @throws Exception
+     * @throws jakarta.servlet.ServletException
      */
     @Test
-    public void testDoGet() throws Exception {
+    public void testDoGet() throws ServletException {
         try (MockedStatic<ConstellationHelpDisplayer> helpDisplayerStaticMock = Mockito.mockStatic(ConstellationHelpDisplayer.class)) {
             helpDisplayerStaticMock.when(() -> ConstellationHelpDisplayer.copy(Mockito.anyString(), Mockito.any())).thenAnswer((Answer<Void>) invocation -> null);
 
             HttpServletRequest requestMock = mock(HttpServletRequest.class);
             HttpServletResponse responseMock = mock(HttpServletResponse.class);
 
-            when(requestMock.getRequestURI()).thenReturn("/file:/C:/Projects/constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/"
-                    + "analyticview/docs/analytic-view.md");
+            when(requestMock.getRequestURI()).thenReturn("/file:/C:/Projects/constellation/build/cluster/modules/ext/docs/"
+                    + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/docs/analytic-view.md");
             when(requestMock.getHeader("referer")).thenReturn(null);
 
             HelpServlet instance = new HelpServlet();
@@ -90,22 +97,32 @@ public class HelpServletNGTest {
     /**
      * Test of doGet method, of class HelpServlet, where a redirect is required
      *
-     * @throws Exception
+     * @throws java.io.IOException
+     * @throws jakarta.servlet.ServletException
      */
     @Test
-    public void testDoGetRedirect() throws Exception {
+    public void testDoGetRedirect() throws IOException, ServletException {
         HttpServletRequest requestMock1 = mock(HttpServletRequest.class);
         HttpServletResponse responseMock1 = mock(HttpServletResponse.class);
 
-        try (MockedStatic<ConstellationHelpDisplayer> helpDisplayerStaticMock = Mockito.mockStatic(ConstellationHelpDisplayer.class)) {
+        try (MockedStatic<ConstellationHelpDisplayer> helpDisplayerStaticMock = Mockito.mockStatic(ConstellationHelpDisplayer.class);
+             MockedStatic<HelpMapper> helpMapperStaticMock = Mockito.mockStatic(HelpMapper.class)) {
             helpDisplayerStaticMock.when(() -> ConstellationHelpDisplayer.copy(Mockito.anyString(), Mockito.any())).thenAnswer((Answer<Void>) invocation -> null);
 
-            when(requestMock1.getRequestURI()).thenReturn("/file:/C:/Projects/constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/"
-                    + "analyticview/constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/docs/question-best-connects-network.md");
-            doNothing().when(responseMock1).sendRedirect(Mockito.eq("/file:/C:/Projects/constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/"
-                    + "views/analyticview/docs/question-best-connects-network.md"));
-            when(requestMock1.getHeader("referer")).thenReturn("/file:/C:/Projects/constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/"
-                    + "analyticview/docs/analytic-view.md");
+            when(requestMock1.getRequestURI()).thenReturn("/file:/C:/Projects/constellation/build/cluster/modules/ext/docs/"
+                    + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/ext/docs/"
+                    + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/question-best-connects-network.md");
+            doNothing().when(responseMock1).sendRedirect(Mockito.eq("/file:/C:/Projects/constellation/build/cluster/modules/ext/docs/"
+                    + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/question-best-connects-network.md"));
+            when(requestMock1.getHeader("referer")).thenReturn("/file:/C:/Projects/constellation/build/cluster/modules/ext/docs/"
+                    + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/analytic-view.md");
+            
+            final Map<String, String> mappings = new HashMap<>();
+            final String sep = File.separator;
+            final String helpPagePath = ".." + sep + "constellation" + sep + "CoreAnalyticView" + sep + "src" + sep + "au" + sep + "gov"
+                    + sep + "asd" + sep + "tac" + sep + "constellation" + sep + "views" + sep + "analyticview" + sep + "question-best-connects-network.md";
+            mappings.put("test", helpPagePath);
+            helpMapperStaticMock.when(() -> HelpMapper.getMappings()).thenReturn(mappings);
 
             HelpServlet instance = new HelpServlet();
             instance.doGet(requestMock1, responseMock1);
@@ -120,10 +137,10 @@ public class HelpServletNGTest {
     /**
      * Test of doGet method, of class HelpServlet, to throw an exception
      *
-     * @throws Exception
+     * @throws jakarta.servlet.ServletException
      */
     @Test(expectedExceptions = Exception.class)
-    public void doGetException() throws Exception {
+    public void doGetException() throws ServletException {
         HttpServletRequest request = null;
         HttpServletResponse response = null;
         HelpServlet instance = new HelpServlet();
@@ -137,11 +154,10 @@ public class HelpServletNGTest {
     @Test
     public void testRedirectPathNoRedirect() {
         String referer = null;
-        String requestPath = "/file:/C:/Projects/constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/"
-                + "docs/analytic-view.md";
-        HelpServlet instance = new HelpServlet();
-        final URL fileUrl = instance.redirectPath(requestPath, referer);
-        assertFalse(instance.isRedirect());
+        String requestPath = "/file:/C:/Projects/constellation/build/cluster/modules/ext/docs/"
+                + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/docs/analytic-view.md";
+        final URL fileUrl = HelpServlet.redirectPath(requestPath, referer);
+        assertFalse(HelpServlet.isRedirect());
         assertEquals(fileUrl, null);
     }
 
@@ -151,14 +167,23 @@ public class HelpServletNGTest {
      */
     @Test
     public void testRedirectPathRedirect() {
-        String referer = "http://localhost:1517/file:/constellation/CoreAttributeEditorView/src/au/gov/asd/tac/constellation/views/"
-                + "attributeeditor/docs/attribute-editor.md";
-        String requestPath = "/file:/constellation/CoreAttributeEditorView/src/au/gov/asd/tac/constellation/views/attributeeditor/"
-                + "constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/docs/analytic-view.md";
-        HelpServlet instance = new HelpServlet();
-        final URL fileUrl = instance.redirectPath(requestPath, referer);
-        assertTrue(fileUrl.toString().contains("constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/docs/analytic-view.md"));
-        assertTrue(instance.isRedirect());
+        String referer = "http://localhost:1517/file:/constellation/build/cluster/modules/ext/docs/"
+                + "CoreAttributeEditorView/src/au/gov/asd/tac/constellation/views/attributeeditor/attribute-editor.md";
+        String requestPath = "/file:/constellation/build/cluster/modules/ext/docs/"
+                + "CoreAttributeEditorView/src/au/gov/asd/tac/constellation/views/ext/docs/"
+                + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/analytic-view.md";
+        try (MockedStatic<HelpMapper> helpMapperStaticMock = Mockito.mockStatic(HelpMapper.class)) {
+            final Map<String, String> mappings = new HashMap<>();
+            final String sep = File.separator;
+            final String helpPagePath = ".." + sep + "constellation" + sep + "CoreAnalyticView" + sep + "src" + sep + "au" + sep + "gov"
+                    + sep + "asd" + sep + "tac" + sep + "constellation" + sep + "views" + sep + "analyticview" + sep + "analytic-view.md";
+            mappings.put("test", helpPagePath);
+            helpMapperStaticMock.when(() -> HelpMapper.getMappings()).thenReturn(mappings);
+            
+            final URL fileUrl = HelpServlet.redirectPath(requestPath, referer);
+            assertTrue(fileUrl.toString().contains("CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/analytic-view.md"));
+            assertTrue(HelpServlet.isRedirect());
+        }
     }
 
     /**
@@ -167,15 +192,23 @@ public class HelpServletNGTest {
      */
     @Test
     public void testRedirectPathRedirectWithinSameModule() {
-        String referer = "http://localhost:1517/file:/constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/"
-                + "analyticview/docs/analytic-view.md";
-        String requestPath = "/file:/constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/"
-                + "constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/docs/question-best-connects-network.md";
-        HelpServlet instance = new HelpServlet();
-        final URL fileUrl = instance.redirectPath(requestPath, referer);
-        assertTrue(fileUrl.toString().contains("constellation/CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/"
-                + "docs/question-best-connects-network.md"));
-        assertTrue(instance.isRedirect());
+        String referer = "http://localhost:1517/file:/constellation/build/cluster/modules/ext/docs/"
+                + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/analytic-view.md";
+        String requestPath = "/file:/constellation/build/cluster/modules/ext/docs/"
+                + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/ext/docs/"
+                + "CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/question-best-connects-network.md";
+        try (MockedStatic<HelpMapper> helpMapperStaticMock = Mockito.mockStatic(HelpMapper.class)) { 
+            final Map<String, String> mappings = new HashMap<>();
+            final String sep = File.separator;
+            final String helpPagePath = ".." + sep + "constellation" + sep + "CoreAnalyticView" + sep + "src" + sep + "au" + sep + "gov"
+                    + sep + "asd" + sep + "tac" + sep + "constellation" + sep + "views" + sep + "analyticview" + sep + "question-best-connects-network.md";
+            mappings.put("test", helpPagePath);
+            helpMapperStaticMock.when(() -> HelpMapper.getMappings()).thenReturn(mappings);
+            
+            final URL fileUrl = HelpServlet.redirectPath(requestPath, referer);
+            assertTrue(fileUrl.toString().contains("CoreAnalyticView/src/au/gov/asd/tac/constellation/views/analyticview/question-best-connects-network.md"));
+            assertTrue(HelpServlet.isRedirect());
+        }
     }
 
     /**
@@ -186,11 +219,10 @@ public class HelpServletNGTest {
     public void testRedirectPathNull() {
         String referer = null;
         String requestPath = null;
-        HelpServlet instance = new HelpServlet();
-        instance.setWasRedirect(true);
-        final URL fileUrl = instance.redirectPath(requestPath, referer);
+        HelpServlet.setWasRedirect(true);
+        final URL fileUrl = HelpServlet.redirectPath(requestPath, referer);
         assertEquals(fileUrl, null);
-        assertFalse(instance.isRedirect());
+        assertFalse(HelpServlet.isRedirect());
     }
 
     @Test
@@ -216,6 +248,5 @@ public class HelpServletNGTest {
         final String expectedResult4 = "/home/username/Constellation/constellation/CoreHelp/path/to/toc.md";
         final String result4 = HelpServlet.stripLeadingPath(referer4);
         assertEquals(result4, expectedResult4);
-
     }
 }

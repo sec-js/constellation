@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 Australian Signals Directorate
+ * Copyright 2010-2024 Australian Signals Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package au.gov.asd.tac.constellation.views.layers.components;
 
 import au.gov.asd.tac.constellation.graph.value.utilities.ExpressionUtilities;
+import static au.gov.asd.tac.constellation.plugins.gui.FileInputPane.handleEventFilter;
 import au.gov.asd.tac.constellation.plugins.parameters.PluginParameter;
 import au.gov.asd.tac.constellation.plugins.parameters.RecentParameterValues;
 import au.gov.asd.tac.constellation.plugins.parameters.RecentValuesChangeEvent;
@@ -153,42 +154,7 @@ public class QueryInputPane extends HBox implements RecentValuesListener {
         this.setVisible(true);
         recentValuesCombo.setDisable(false);
 
-        field.addEventFilter(KeyEvent.KEY_PRESSED, (final KeyEvent event) -> {
-            if (event.getCode() == KeyCode.DELETE) {
-                final IndexRange selection = field.getSelection();
-                if (selection.getLength() == 0) {
-                    field.deleteNextChar();
-                } else {
-                    field.deleteText(selection);
-                }
-                event.consume();
-            } else if (event.isShortcutDown() && event.isShiftDown() && (event.getCode() == KeyCode.RIGHT)) {
-                field.selectNextWord();
-                event.consume();
-            } else if (event.isShortcutDown() && event.isShiftDown() && (event.getCode() == KeyCode.LEFT)) {
-                field.selectPreviousWord();
-                event.consume();
-            } else if (event.isShortcutDown() && (event.getCode() == KeyCode.RIGHT)) {
-                field.nextWord();
-                event.consume();
-            } else if (event.isShortcutDown() && (event.getCode() == KeyCode.LEFT)) {
-                field.previousWord();
-                event.consume();
-            } else if (event.isShiftDown() && (event.getCode() == KeyCode.RIGHT)) {
-                field.selectForward();
-                event.consume();
-            } else if (event.isShiftDown() && (event.getCode() == KeyCode.LEFT)) {
-                field.selectBackward();
-                event.consume();
-            } else if (event.isShortcutDown() && (event.getCode() == KeyCode.A)) {
-                field.selectAll();
-                event.consume();
-            } else if (event.getCode() == KeyCode.ESCAPE) {
-                event.consume();
-            } else {
-                // Do nothing
-            }
-        });
+        field.addEventFilter(KeyEvent.KEY_PRESSED, (final KeyEvent event) -> handleEventFilter(event, field));
 
         final Tooltip tooltip = new Tooltip("");
         tooltip.setStyle("-fx-text-fill: white;");
@@ -235,7 +201,7 @@ public class QueryInputPane extends HBox implements RecentValuesListener {
     }
     
     public String getQuery() {
-        return field.getText() == "" ? null : field.getText();
+        return field.getText().equals("") ? null : field.getText();
     }
     
     public void setQuery(final String query) {

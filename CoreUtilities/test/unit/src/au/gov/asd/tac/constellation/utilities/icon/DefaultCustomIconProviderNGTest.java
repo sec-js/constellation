@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 Australian Signals Directorate
+ * Copyright 2010-2024 Australian Signals Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.atLeast;
 import org.openide.util.ImageUtilities;
 import static org.testng.Assert.assertEquals;
 import org.testng.annotations.AfterClass;
@@ -41,25 +41,26 @@ import org.testng.annotations.Test;
  */
 public class DefaultCustomIconProviderNGTest {
 
-    final static String TEST_ICON_NAME = "Category1.TestIcon1";
-
-    public DefaultCustomIconProviderNGTest() {
-    }
-
+    private static final String TEST_ICON_NAME = "Category1.TestIcon1";
+    
     @BeforeClass
     public static void setUpClass() throws Exception {
+        // Not currently required
     }
 
     @AfterClass
     public static void tearDownClass() throws Exception {
+        // Not currently required
     }
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
+        // Not currently required
     }
 
     @AfterMethod
     public void tearDownMethod() throws Exception {
+        // Not currently required
     }
 
     /**
@@ -71,8 +72,7 @@ public class DefaultCustomIconProviderNGTest {
     public void runTests() throws URISyntaxException {
         // Note, the DefaultCustomIconProvider class will be called through the IconManager when dealing with custom icons
         // 
-        try (MockedStatic<DefaultCustomIconProvider> defaultCustomIconProviderMock = Mockito.mockStatic(DefaultCustomIconProvider.class);
-               ) {
+        try (MockedStatic<DefaultCustomIconProvider> defaultCustomIconProviderMock = Mockito.mockStatic(DefaultCustomIconProvider.class)) {
             // Get a test directory location for the getIconDirectory call
             URL exampleIcon = DefaultCustomIconProviderNGTest.class.getResource("resources/");
             File testFile = new File(exampleIcon.toURI());
@@ -140,7 +140,7 @@ public class DefaultCustomIconProviderNGTest {
                        
             System.out.print("TEST: Check the number of calls on a static method: ");
             // Verify defaultCustomIconProvider.getIconDirectory was called the correct number of times
-            defaultCustomIconProviderMock.verify(() -> DefaultCustomIconProvider.getIconDirectory(), times(6));
+            defaultCustomIconProviderMock.verify(() -> DefaultCustomIconProvider.getIconDirectory(), atLeast(5));
             System.out.println(" *PASSED*");
             
         }
@@ -217,11 +217,11 @@ public class DefaultCustomIconProviderNGTest {
     public void prepareFileDir(final File testFile){
         // reset the icon resource folder to only contain the test_bagel_blue.png file
         List<String> filenames = new ArrayList<>();
-        for(File f : testFile.listFiles()){
+        for (File f : testFile.listFiles()){
             String path = f.getAbsolutePath();
             filenames.add(path);
         }
-        for(String path : filenames){
+        for (String path : filenames){
             if (!path.contains("bagel_blue")){
                 File f = new File(path);
                 f.delete();

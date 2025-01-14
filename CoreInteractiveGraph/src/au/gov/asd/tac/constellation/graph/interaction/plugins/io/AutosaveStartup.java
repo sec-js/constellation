@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 Australian Signals Directorate
+ * Copyright 2010-2024 Australian Signals Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,14 +47,24 @@ import org.openide.windows.OnShowing;
 public final class AutosaveStartup implements Runnable {
 
     private static final String AUTOSAVE_THREAD_NAME = "Autosave Startup";
+    private static final String GRAPH_LOAD_ERROR = "Error Loading Graph";
     private static final Logger LOGGER = Logger.getLogger(AutosaveStartup.class.getName());
     /**
      * The number of milliseconds after which we purge old autosaves.
      */
     private static final long PURGE_PERIOD_MS = 28 * 24 * 60 * 60 * 1000L;
 
+    /**
+     * This is the system property that is set to true in order to make the AWT
+     * thread run in headless mode for tests, etc.
+     */
+    private static final String AWT_HEADLESS_PROPERTY = "java.awt.headless";
+
     @Override
     public void run() {
+        if (Boolean.TRUE.toString().equalsIgnoreCase(System.getProperty(AWT_HEADLESS_PROPERTY))) {
+            return;
+        }
         synchronized (String.class) {
             // Look for existing autosaved in-memory graphs.
             final File[] saveFiles = AutosaveUtilities.getAutosaves(FileExtensionConstants.STAR_AUTOSAVE);
@@ -91,7 +101,14 @@ public final class AutosaveStartup implements Runnable {
 
                                             AutosaveUtilities.deleteAutosave(f);
                                         } catch (GraphParseException | IOException ex) {
-                                            LOGGER.log(Level.WARNING, "Error loading graph", ex);
+                                            final Throwable gpioEx;
+                                            if (ex instanceof IOException) {
+                                                gpioEx = new IOException(NotifyDisplayer.BLOCK_POPUP_FLAG + GRAPH_LOAD_ERROR);
+                                            } else {
+                                                gpioEx = new GraphParseException(NotifyDisplayer.BLOCK_POPUP_FLAG + GRAPH_LOAD_ERROR);
+                                            }
+                                            gpioEx.setStackTrace(ex.getStackTrace());
+                                            LOGGER.log(Level.WARNING, GRAPH_LOAD_ERROR, gpioEx);
                                             NotifyDisplayer.display("Error loading graph: " + ex.getMessage(), NotifyDescriptor.ERROR_MESSAGE);
                                         }
                                     }

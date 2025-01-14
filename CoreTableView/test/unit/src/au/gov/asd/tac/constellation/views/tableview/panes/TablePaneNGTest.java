@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 Australian Signals Directorate
+ * Copyright 2010-2024 Australian Signals Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,9 +45,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.testfx.api.FxToolkit;
 import org.testfx.util.WaitForAsyncUtils;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.fail;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -58,6 +58,7 @@ import org.testng.annotations.Test;
  * @author formalhaunt
  */
 public class TablePaneNGTest {
+    
     private static final Logger LOGGER = Logger.getLogger(TablePaneNGTest.class.getName());
 
     private TableViewTopComponent tableViewTopComponent;
@@ -83,8 +84,7 @@ public class TablePaneNGTest {
     @BeforeMethod
     public void setUpMethod() throws Exception {
         tableViewTopComponent = mock(TableViewTopComponent.class);
-        when(tableViewTopComponent.getExecutorService())
-                .thenReturn(Executors.newSingleThreadExecutor());
+        when(tableViewTopComponent.getExecutorService()).thenReturn(Executors.newSingleThreadExecutor());
 
         tablePane = spy(new TablePane(tableViewTopComponent));
     }
@@ -204,8 +204,7 @@ public class TablePaneNGTest {
         tableColumns.add(mock(TableColumn.class));
         tableColumns.add(mock(TableColumn.class));
 
-        final ObservableList<TableColumn<ObservableList<String>, String>> columns
-                = FXCollections.observableList(tableColumns);
+        final ObservableList<TableColumn<ObservableList<String>, String>> columns = FXCollections.observableList(tableColumns);
 
         when(tablePane.getTable()).thenReturn(table);
         when(table.getTableView()).thenReturn(tableView);

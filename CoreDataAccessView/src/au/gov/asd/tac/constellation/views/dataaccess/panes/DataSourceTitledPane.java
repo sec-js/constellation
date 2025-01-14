@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 Australian Signals Directorate
+ * Copyright 2010-2024 Australian Signals Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -46,7 +45,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -65,13 +63,10 @@ public class DataSourceTitledPane extends TitledPane implements PluginParameters
     /**
      * A thread pool to create parameters in.
      */
-    private static final ExecutorService PARAM_CREATOR = ConstellationGlobalThreadPool.getThreadPool().getFixedThreadPool();
+    private static final ExecutorService PARAM_CREATOR = ConstellationGlobalThreadPool.getThreadPool().getFixedThreadPool("Param-Thread", 1);
 
     private static final Label DUMMY_LABEL = new Label("Waiting...");
     private static final String DAV_CREATOR_THREAD_NAME = "DAV Pane Creator";
-
-    // Insets with 0 top and bottom so the title doesn't change size vertically.
-    private static final Insets HELP_INSETS = new Insets(0, 8, 0, 8);
     
     private volatile PluginParameters dataSourceParameters;
     private final DataAccessPlugin plugin;
@@ -94,9 +89,6 @@ public class DataSourceTitledPane extends TitledPane implements PluginParameters
      */
     private boolean isLoaded;
 
-    private static final Image HELP_ICON = UserInterfaceIconProvider.HELP
-            .buildImage(16, ConstellationColor.BLUEBERRY.getJavaColor());
-
     /**
      * Creates a new titled pane for the give plugin.
      *
@@ -115,7 +107,7 @@ public class DataSourceTitledPane extends TitledPane implements PluginParameters
 
         isLoaded = false;
         enabled = new CheckBox();
-        label = new Label(plugin.getName(), dataSourceIcon);
+        label = new Label(String.format("  %s", plugin.getName()), dataSourceIcon);
 
         setGraphic(createTitleBar());
         enabled.setDisable(true);
@@ -129,8 +121,12 @@ public class DataSourceTitledPane extends TitledPane implements PluginParameters
     }
     
     @Override
-    public void validityChanged(boolean isEnabled) {
-        isEnabled = parametersCreated && isEnabled;
+    public void validityChanged(final boolean allowEnabling) {
+        if (System.getProperty("dav.graph.ready") == null
+                || System.getProperty("dav.graph.ready").equals(Boolean.FALSE.toString())) {
+            return;
+        }
+        final boolean isEnabled = parametersCreated && allowEnabling;
         enabled.setSelected(isEnabled);
         if (enabled.isSelected()) {
             while (getStyleClass().contains(MATCHED_STYLE)) {
@@ -368,13 +364,12 @@ public class DataSourceTitledPane extends TitledPane implements PluginParameters
         final HBox box = new HBox(enabled, label);
         final HelpCtx helpCtx = plugin.getHelpCtx();
         if (helpCtx != null) {
-            final Button helpButton = new Button("", new ImageView(HELP_ICON));
-            helpButton.paddingProperty().set(HELP_INSETS);
+            final Button helpButton = new Button("", new ImageView(UserInterfaceIconProvider.HELP.buildImage(16, ConstellationColor.SKY.getJavaColor())));
             helpButton.setTooltip(new Tooltip(String.format("Display help for %s", plugin.getName())));
             helpButton.setOnAction(event -> plugin.getHelpCtx().display());
 
             // Get rid of the ugly button look so the icon stands alone.
-            helpButton.setStyle("-fx-border-color: transparent;-fx-background-color: transparent;");
+            helpButton.setStyle("-fx-border-color: transparent;-fx-background-color: transparent;-fx-padding: 0 0 0 10; -fx-effect: null; ");
 
             // Align the help buttons on the right hand side if the width allows it.
             box.getChildren().add(helpButton);
@@ -402,4 +397,10 @@ public class DataSourceTitledPane extends TitledPane implements PluginParameters
 
         return !paramNames.isEmpty();
     }
+
+    @Override
+    public void notifyParameterValidityChange(final PluginParameter<?> parameter, final boolean currentlySatisfied) {
+        // Must be overriden to implement PluginParametersPaneListener
+    }
+
 }
